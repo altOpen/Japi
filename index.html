@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Japi</title>
 
-<!-- PWA Manifest & Icons -->
+<!-- PWA Configuration -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png">
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png">
@@ -203,19 +203,20 @@
     color: var(--text-main);
   }
 
-  /* --- FOOTER --- */
+  /* --- FOOTER (Updated Stack) --- */
   footer {
     flex-shrink: 0;
-    padding-top: 12px;
+    padding-top: 16px;
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
+    
+    /* Vertical Stack: Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 6px;
-    position: relative;
+    gap: 8px;
   }
   
   .copyright-text {
@@ -224,38 +225,41 @@
     color: #9ca3af;
   }
 
-  /* Footer Buttons Row */
-  .footer-actions {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  #infoBtn, #installBtn {
+  /* TERMS BUTTON */
+  #infoBtn {
     background: transparent;
     border: none;
-    box-shadow: none;
-    padding: 6px 12px;
+    padding: 4px;
     font-family: var(--font-family);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-  
-  #installBtn {
-    color: var(--primary-blue);
-    background: #eef6ff;
-    display: none; /* Hidden by default */
   }
 
-  #infoBtn:active, #installBtn:active {
-    background: #e5e7eb;
+  /* INSTALL BUTTON (Big & Prominent) */
+  #installBtn {
+    display: none; /* Hidden until browser says it's ready */
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    border-radius: 50px; /* Pill shape */
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #installBtn:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 5px rgba(0, 122, 255, 0.2);
   }
 
   /* --- DATE STYLES --- */
@@ -286,7 +290,6 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
     display: none;
     justify-content: center;
     align-items: center;
@@ -391,11 +394,9 @@
   </div>
 
   <footer>
+    <button id="installBtn">Install App</button>
     <span class="copyright-text">All rights reserved © Manash Sharma</span>
-    <div class="footer-actions">
-      <button id="installBtn">Install App</button>
-      <button id="infoBtn">Terms and Conditions</button>
-    </div>
+    <button id="infoBtn">Terms and Conditions</button>
   </footer>
 
 </div>
@@ -410,39 +411,34 @@
 </div>
 
 <script>
-// --- SERVICE WORKER REGISTRATION (Required for Install Prompt) ---
+// --- SERVICE WORKER REGISTRATION ---
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-  .then(() => console.log('Service Worker Registered'));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered!', reg))
+      .catch(err => console.log('SW failed', err));
+  });
 }
 
-// --- INSTALL PROMPT LOGIC ---
+// --- INSTALL LOGIC ---
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
   e.preventDefault();
-  // Stash the event so it can be triggered later.
   deferredPrompt = e;
-  // Update UI to notify the user they can add to home screen
+  // Show the install button now that the browser is ready
   installBtn.style.display = 'block';
+});
 
-  installBtn.addEventListener('click', (e) => {
-    // hide our user interface that shows our A2HS button
-    installBtn.style.display = 'none';
-    // Show the prompt
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
     deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the A2HS prompt');
-      } else {
-        console.log('User dismissed the A2HS prompt');
-      }
-      deferredPrompt = null;
-    });
-  });
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    deferredPrompt = null;
+    installBtn.style.display = 'none'; // Hide button after action
+  }
 });
 
 const MONTH_NAMES = [
@@ -466,14 +462,14 @@ const HOLIDAYS_2025 = {
 
 // 2026 Full Holidays
 const HOLIDAYS_2026 = {
- "1-14":"Magh Bihu and Tusu Puja", "1-15":"Magh Bihu and Tusu Puja", "1-23":"Netaji’s Birthday", "1-26":"Republic Day",
+ "1-14":"Magh Bihu and Tusu Puja", "1-15":"Magh Bihu and Tusu Puja", "1-23":"Netaji's Birth Day", "1-26":"Republic Day",
  "1-27":"Gwthar Bathou San", "1-31":"Me-Dam-Me-Phi", "2-1":"Bir Chilaray Divas", "3-3":"Dol Jatra", "3-21":"Id-Ul-Fitr",
  "4-3":"Good Friday", "4-14":"Bohag Bihu", "4-15":"Bohag Bihu", "4-16":"Bohag Bihu", "4-18":"Tithi of Damodar Deva",
  "4-21":"Sati Sadhini Divas", "5-1":"May Day and Budha Purnima", "5-27":"Id-ul-Zuha", "6-1":"Janmotsav of Sri Sri Madhabdeva",
  "8-15":"Independence Day", "9-1":"Tirubhav Tithi of Sri Sri Madhabdeva", "9-4":"Janmastomi", "9-12":"Tirubhav Tithi of Srimanta Sankardeva",
  "9-21":"Janmotsav of Srimanta Sankardeva", "9-22":"Karam Puja", "10-2":"Birthday of Mahatma Gandhi", "10-18":"Kati Bihu and Durga Puja",
  "10-19":"Durga Puja", "10-20":"Durga Puja", "10-21":"Vijaya Dashami", "10-25":"Half Holiday at 1:00 PM: Lakshmi Puja",
- "11-8":"Kali Puja and Diwali", "11-11":"Bhatri Dwitiya", "11-15":"Chhath Puja", "11-24":"Guru Nanak’s Birthday and Lachit Divas",
+ "11-8":"Kali Puja and Diwali", "11-11":"Bhatri Dwitiya", "11-15":"Chhath Puja", "11-24":"Guru Nanak's Birthday and Lachit Divas",
  "12-2":"Asom Divas (Su-Ka-Pha Divas)", "12-25":"Christmas Day"
 };
 
@@ -489,7 +485,7 @@ const RESTRICTED_HOLIDAYS_2026 = {
  "8-26": "Fateha-e-Dwaz-Daham", "9-15": "Nau Khai Festival", "9-16": "Birthday of Sri Sri Thakur Anukul Chandra",
  "11-1": "Kuki Chavang Kut", "11-7": "Wangala Festival", "11-11": "Abhibhav Tithi of Sri Sri Bhubaneswar Sadhu Thakur",
  "11-19": "Bir Raghav Moran Divas", "11-24": "Death Anniversary of Guru Teg Bahadur Ji", "12-5": "Sikpui Ruoi",
- "12-10": "Martyr’s Day", "12-19": "Death Anniversary of Shree Shree Aniruddhadev", "12-22": "Gaan Ngai", "12-24": "Christmas Eve"
+ "12-10": "Martyr's Day", "12-19": "Death Anniversary of Shree Shree Aniruddhadev", "12-22": "Gaan Ngai", "12-24": "Christmas Eve"
 };
 
 let viewDate = new Date(); 
@@ -564,9 +560,11 @@ function renderCalendar(){
 
     let classes = [];
     
+    // Check Full Holiday
     let holidayName = currentHolidayList[key];
     let isHoliday = !!holidayName;
 
+    // Check Restricted Holiday
     let restrictedName = currentRestrictedList[key];
     let isRestricted = !!restrictedName;
 
@@ -610,6 +608,7 @@ function handleDateClick(info){
   const dow = info.dateObj.getDay();
   let msg = "";
 
+  // 1. Priority: Full Holiday
   if(info.isHoliday){
     msg = info.holidayName;
     if(dow === 0) msg += " (Sunday)";
@@ -621,6 +620,7 @@ function handleDateClick(info){
     return;
   }
 
+  // 2. Priority: Restricted Holiday
   if(info.isRestricted){
     msg = "Restricted Holiday: " + info.restrictedName;
     if(dow === 0) msg += " (Sunday)";
