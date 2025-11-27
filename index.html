@@ -5,32 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Japi</title>
 
-<link rel="icon" type="image/png" href="https://github.com/altOpen/Calender/blob/main/logo.png?raw=true">
-<meta name="theme-color" content="#d32f2f"> <meta name="apple-mobile-web-app-capable" content="yes">
+<!-- PWA Manifest & Icons -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png">
+<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png">
+<meta name="theme-color" content="#d32f2f">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Japi">
-<link rel="apple-touch-icon" href="https://github.com/altOpen/Calender/blob/main/logo.png?raw=true">
-
-<link rel="manifest" href='data:application/manifest+json,{
-  "short_name": "Japi",
-  "name": "Japi",
-  "icons": [
-    {
-      "src": "https://github.com/altOpen/Calender/blob/main/logo.png?raw=true",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "https://github.com/altOpen/Calender/blob/main/logo.png?raw=true",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#d32f2f",
-  "background_color": "#ffffff"
-}'>
 
 <style>
   :root {
@@ -234,6 +215,7 @@
     justify-content: center;
     align-items: center;
     gap: 6px;
+    position: relative;
   }
   
   .copyright-text {
@@ -242,14 +224,21 @@
     color: #9ca3af;
   }
 
-  #infoBtn {
+  /* Footer Buttons Row */
+  .footer-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  #infoBtn, #installBtn {
     background: transparent;
     border: none;
     box-shadow: none;
-    padding: 4px 8px;
+    padding: 6px 12px;
     font-family: var(--font-family);
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -259,13 +248,17 @@
     transition: all 0.2s;
   }
   
-  #infoBtn:active {
+  #installBtn {
     color: var(--primary-blue);
-    background: #eff6ff;
+    background: #eef6ff;
+    display: none; /* Hidden by default */
+  }
+
+  #infoBtn:active, #installBtn:active {
+    background: #e5e7eb;
   }
 
   /* --- DATE STYLES --- */
-  
   .holiday .day-number,
   .sunday .day-number,
   .sat-special .day-number {
@@ -399,11 +392,15 @@
 
   <footer>
     <span class="copyright-text">All rights reserved © Manash Sharma</span>
-    <button id="infoBtn">Terms and Conditions</button>
+    <div class="footer-actions">
+      <button id="installBtn">Install App</button>
+      <button id="infoBtn">Terms and Conditions</button>
+    </div>
   </footer>
 
 </div>
 
+<!-- Modal -->
 <div id="modalOverlay">
   <div id="modalBox">
     <div id="modalTitle">Info</div>
@@ -413,6 +410,41 @@
 </div>
 
 <script>
+// --- SERVICE WORKER REGISTRATION (Required for Install Prompt) ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+  .then(() => console.log('Service Worker Registered'));
+}
+
+// --- INSTALL PROMPT LOGIC ---
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  // Update UI to notify the user they can add to home screen
+  installBtn.style.display = 'block';
+
+  installBtn.addEventListener('click', (e) => {
+    // hide our user interface that shows our A2HS button
+    installBtn.style.display = 'none';
+    // Show the prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the A2HS prompt');
+      } else {
+        console.log('User dismissed the A2HS prompt');
+      }
+      deferredPrompt = null;
+    });
+  });
+});
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -532,11 +564,9 @@ function renderCalendar(){
 
     let classes = [];
     
-    // Check Full Holiday
     let holidayName = currentHolidayList[key];
     let isHoliday = !!holidayName;
 
-    // Check Restricted Holiday
     let restrictedName = currentRestrictedList[key];
     let isRestricted = !!restrictedName;
 
@@ -580,7 +610,6 @@ function handleDateClick(info){
   const dow = info.dateObj.getDay();
   let msg = "";
 
-  // 1. Priority: Full Holiday
   if(info.isHoliday){
     msg = info.holidayName;
     if(dow === 0) msg += " (Sunday)";
@@ -592,7 +621,6 @@ function handleDateClick(info){
     return;
   }
 
-  // 2. Priority: Restricted Holiday
   if(info.isRestricted){
     msg = "Restricted Holiday: " + info.restrictedName;
     if(dow === 0) msg += " (Sunday)";
@@ -619,3 +647,5 @@ renderCalendar();
 
 </body>
 </html>
+
+
