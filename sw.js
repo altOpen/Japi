@@ -2,7 +2,7 @@ const CACHE_NAME = 'japi-v1';
 const ASSETS = [
   './index.html',
   './manifest.json',
-  '[https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png](https://cdn.jsdelivr.net/gh/altOpen/Calender@main/logo.png)'
+  '[https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg](https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg)'
 ];
 
 self.addEventListener('install', (e) => {

@@ -7,6 +7,7 @@
 
 <!-- PWA Configuration -->
 <link rel="manifest" href="manifest.json">
+<!-- Using CDN for Japi Repo -->
 <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg">
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg">
 <meta name="theme-color" content="#d32f2f">
@@ -203,13 +204,15 @@
     color: var(--text-main);
   }
 
-  /* --- FOOTER --- */
+  /* --- FOOTER (Updated Layout) --- */
   footer {
     flex-shrink: 0;
     padding-top: 16px;
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
+    
+    /* Flex Column: Logo -> Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -223,23 +226,20 @@
     color: #9ca3af;
   }
 
-  /* TERMS BUTTON */
-  #infoBtn {
-    background: transparent;
-    border: none;
-    padding: 4px;
-    font-family: var(--font-family);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
+  /* LOGO IN FOOTER */
+  .footer-logo {
+    width: 52px;  /* Professional Icon Size */
+    height: 52px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background: white;
+    object-fit: cover;
+    margin-bottom: 4px; /* Space between Logo and Install Button */
   }
 
   /* INSTALL BUTTON */
   #installBtn {
-    display: none; /* Logic controls visibility */
+    display: none;
     background: var(--primary-blue);
     color: white;
     border: none;
@@ -257,6 +257,20 @@
 
   #installBtn:active {
     transform: scale(0.96);
+  }
+
+  /* TERMS BUTTON */
+  #infoBtn {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    font-family: var(--font-family);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
   }
 
   /* --- DATE STYLES --- */
@@ -370,7 +384,7 @@
   <div class="legend">
     <div class="legend-row">
       <span class="swatch-red"></span>
-      <span>Holiday       </span>
+      <span>Holiday          </span>
       <span class="swatch-blue"></span>
       <span>Restricted Holiday</span>
     </div>
@@ -389,6 +403,7 @@
   </div>
 
   <footer>
+    <img src="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg" class="footer-logo" alt="Japi Logo">
     <button id="installBtn">Install App</button>
     <span class="copyright-text">All rights reserved © Manash Sharma</span>
     <button id="infoBtn">Terms and Conditions</button>
@@ -413,35 +428,39 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// --- iOS & ANDROID INSTALL LOGIC ---
+// --- UNIVERSAL INSTALL LOGIC ---
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
 const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
 
-// Android Logic
+// Android / Desktop
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = 'block';
+  installBtn.style.display = 'block'; 
 });
 
-// iOS Logic
+// iOS
 if (isIos && !isInStandaloneMode) {
-  installBtn.style.display = 'block';
+  installBtn.style.display = 'block'; 
 }
 
 installBtn.addEventListener('click', async () => {
   if (isIos) {
-    // Show iOS Instructions
     showModal(`
-      <strong>To install on iPhone:</strong><br><br>
-      1. Tap the <strong>Share</strong> button (box with arrow) at the bottom.<br>
-      2. Scroll down and tap <strong>"Add to Home Screen"</strong>.<br>
-      3. Tap <strong>Add</strong>.
+      <div style="text-align: center;">
+        <img src="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.jpg" style="width:64px; border-radius:12px; margin-bottom:12px; background:white; padding:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <br>
+        <strong>Install Japi on iPhone</strong>
+        <div style="text-align: left; margin-top: 15px; font-size: 13px; color: #444;">
+          1. Tap the <strong>Share</strong> button <span style="font-size:16px">⎋</span> at the bottom.<br><br>
+          2. Scroll down and tap <strong>"Add to Home Screen"</strong>.<br><br>
+          3. Tap <strong>Add</strong> in the top right corner.
+        </div>
+      </div>
     `);
   } else if (deferredPrompt) {
-    // Android Prompt
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
@@ -527,7 +546,7 @@ document.getElementById("infoBtn").onclick = function() {
 
 function showModal(msg){
   modalTitle.textContent = "Assam Holiday Calendar";
-  modalMsg.innerHTML = msg; // Allows HTML like <br>
+  modalMsg.innerHTML = msg; 
   modalOverlay.style.display = "flex";
 }
 
