@@ -203,15 +203,13 @@
     color: var(--text-main);
   }
 
-  /* --- FOOTER (Updated Stack) --- */
+  /* --- FOOTER --- */
   footer {
     flex-shrink: 0;
     padding-top: 16px;
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
-    
-    /* Vertical Stack: Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -239,13 +237,13 @@
     cursor: pointer;
   }
 
-  /* INSTALL BUTTON (Big & Prominent) */
+  /* INSTALL BUTTON */
   #installBtn {
-    display: none; /* Hidden until browser says it's ready */
+    display: none; /* Logic controls visibility */
     background: var(--primary-blue);
     color: white;
     border: none;
-    border-radius: 50px; /* Pill shape */
+    border-radius: 50px;
     padding: 10px 24px;
     font-size: 13px;
     font-weight: 700;
@@ -253,13 +251,12 @@
     letter-spacing: 0.5px;
     box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
 
   #installBtn:active {
     transform: scale(0.96);
-    box-shadow: 0 2px 5px rgba(0, 122, 255, 0.2);
   }
 
   /* --- DATE STYLES --- */
@@ -411,33 +408,46 @@
 </div>
 
 <script>
-// --- SERVICE WORKER REGISTRATION ---
+// --- SERVICE WORKER ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered!', reg))
-      .catch(err => console.log('SW failed', err));
+    navigator.serviceWorker.register('./sw.js');
   });
 }
 
-// --- INSTALL LOGIC ---
+// --- iOS & ANDROID INSTALL LOGIC ---
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
+const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
 
+// Android Logic
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show the install button now that the browser is ready
   installBtn.style.display = 'block';
 });
 
+// iOS Logic
+if (isIos && !isInStandaloneMode) {
+  installBtn.style.display = 'block';
+}
+
 installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
+  if (isIos) {
+    // Show iOS Instructions
+    showModal(`
+      <strong>To install on iPhone:</strong><br><br>
+      1. Tap the <strong>Share</strong> button (box with arrow) at the bottom.<br>
+      2. Scroll down and tap <strong>"Add to Home Screen"</strong>.<br>
+      3. Tap <strong>Add</strong>.
+    `);
+  } else if (deferredPrompt) {
+    // Android Prompt
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
     deferredPrompt = null;
-    installBtn.style.display = 'none'; // Hide button after action
+    if(outcome === 'accepted') installBtn.style.display = 'none';
   }
 });
 
@@ -519,7 +529,7 @@ document.getElementById("infoBtn").onclick = function() {
 
 function showModal(msg){
   modalTitle.textContent = "Assam Holiday Calendar";
-  modalMsg.textContent = msg;
+  modalMsg.innerHTML = msg; // Allows HTML like <br>
   modalOverlay.style.display = "flex";
 }
 
@@ -560,11 +570,9 @@ function renderCalendar(){
 
     let classes = [];
     
-    // Check Full Holiday
     let holidayName = currentHolidayList[key];
     let isHoliday = !!holidayName;
 
-    // Check Restricted Holiday
     let restrictedName = currentRestrictedList[key];
     let isRestricted = !!restrictedName;
 
@@ -608,7 +616,6 @@ function handleDateClick(info){
   const dow = info.dateObj.getDay();
   let msg = "";
 
-  // 1. Priority: Full Holiday
   if(info.isHoliday){
     msg = info.holidayName;
     if(dow === 0) msg += " (Sunday)";
@@ -620,7 +627,6 @@ function handleDateClick(info){
     return;
   }
 
-  // 2. Priority: Restricted Holiday
   if(info.isRestricted){
     msg = "Restricted Holiday: " + info.restrictedName;
     if(dow === 0) msg += " (Sunday)";
