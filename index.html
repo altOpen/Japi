@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Assam Holiday Calendar</title>
+
+<style>
+  :root {
+    --primary-red: #d32f2f;
+    --primary-blue: #007AFF;
+    --bg-color: #f2f4f7;
+    --card-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --cell-gap: 4px;
+    --font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* FULL SCREEN LAYOUT */
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+  }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    width: 100%;
+    height: 100%;
+    max-width: 480px; /* Constrain width on desktop */
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    padding: 16px; 
+    box-sizing: border-box;
+    box-shadow: var(--shadow-card);
+    position: relative;
+  }
+
+  /* Add border radius only on larger screens */
+  @media (min-width: 500px) {
+    .container {
+      height: 90vh;
+      border-radius: 24px;
+    }
+  }
+
+  /* --- HEADER --- */
+  header {
+    flex-shrink: 0; /* Never shrink */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .header-text h1 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+  
+  .header-text h2 {
+    margin: 2px 0 0 0;
+    font-size: 20px; 
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  /* --- ARROW BUTTONS --- */
+  .nav-group {
+    display: flex;
+    gap: 12px;
+  }
+
+  .nav-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nav-btn:active {
+    background: var(--primary-blue);
+    color: white;
+    transform: scale(0.9);
+  }
+
+  /* --- LEGEND --- */
+  .legend {
+    flex-shrink: 0;
+    display: flex;
+    gap: 12px;
+    margin: 12px 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    background: #f9fafb;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .swatch { width: 8px; height: 8px; border-radius: 2px; background: var(--primary-red); }
+
+  /* --- CALENDAR GRID --- */
+  /* This takes up all available remaining space */
+  .calendar-wrapper {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%; 
+    gap: var(--cell-gap);
+  }
+
+  .dow {
+    text-align: center;
+    padding-bottom: 6px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  .cell {
+    width: 100%;
+    aspect-ratio: 1 / 1; 
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cell.outside { cursor: default; }
+
+  .day-number {
+    font-size: 14px;
+    font-weight: 500;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    color: var(--text-main);
+  }
+
+  /* --- FOOTER --- */
+  footer {
+    flex-shrink: 0; /* Always visible */
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+    margin-top: auto; /* Pushes to absolute bottom */
+  }
+
+  /* --- STYLES --- */
+  .holiday .day-number,
+  .sunday .day-number,
+  .sat-special .day-number {
+    background: #fee2e2;
+    color: var(--primary-red);
+    font-weight: 700;
+  }
+
+  .today .day-number {
+    background: var(--primary-blue) !important;
+    color: white !important;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    font-weight: 700;
+  }
+
+  /* --- MODAL --- */
+  #modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  #modalBox {
+    background: white;
+    width: 80%;
+    max-width: 300px;
+    padding: 24px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #modalTitle { 
+    font-size: 18px; 
+    font-weight: 700; 
+    margin-bottom: 8px; 
+    color: var(--text-main);
+  }
+  
+  #modalMsg { 
+    font-size: 14px; 
+    margin-bottom: 24px; 
+    line-height: 1.5; 
+    color: var(--text-muted);
+  }
+
+  #modalClose {
+    background: var(--text-main);
+    color: white;
+    border: none;
+    padding: 12px 0;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+  }
+
+  @keyframes popUp {
+    from { transform: scale(0.9) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="header-text">
+      <h1>Assam Holiday Calendar</h1>
+      <h2 id="currentDisplay"></h2>
+    </div>
+
+    <div class="nav-group">
+      <button class="nav-btn" id="prevBtn">&#8592;</button>
+      <button class="nav-btn" id="nextBtn">&#8594;</button>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch"></span> Holiday / Sun / 2nd & 4th Sat</div>
+  </div>
+
+  <div class="calendar-wrapper">
+    <div class="calendar" id="calendar">
+      <div class="dow">Sun</div>
+      <div class="dow">Mon</div>
+      <div class="dow">Tue</div>
+      <div class="dow">Wed</div>
+      <div class="dow">Thu</div>
+      <div class="dow">Fri</div>
+      <div class="dow">Sat</div>
+      
+      </div>
+  </div>
+
+  <footer>
+    All right reserved © Manash Sharma
+  </footer>
+
+</div>
+
+<div id="modalOverlay">
+  <div id="modalBox">
+    <div id="modalTitle">Assam Holiday Calendar</div>
+    <div id="modalMsg"></div>
+    <button id="modalClose">Close</button>
+  </div>
+</div>
+
+<script>
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const HOLIDAYS_2025 = {
+ "1-14": "Magh Bihu and Tusu Puja", "1-15": "Magh Bihu and Tusu Puja", "1-23": "Netaji's Birth Day", "1-26": "Republic Day",
+ "1-28": "Gwther Bathow San", "1-31": "Me-Dam-Me-Phi", "2-12": "Bir Chilarai Divas", "3-14": "Dol Jatra",
+ "3-31": "Id-Ul-Fitre", "4-14": "Bohag Bihu", "4-15": "Bohag Bihu", "4-16": "Bohag Bihu", "4-18": "Good Friday",
+ "4-21": "Sati Sadhini Divas", "4-28": "Tithi of Damodar Dev", "5-1": "May Day", "5-12": "Buddha Purnima",
+ "6-7": "Id-U'l-Zuha", "6-12": "Janmotsav of Shri Shri Madhabdeva", "8-15": "Independance Day",
+ "8-25": "Tirubhav Tithi of Srimanta Sankardeva", "9-3": "Karam Puja", "9-12": "Tirubhav Tithi of Srimanta Madhabdeva",
+ "9-29": "Durga Puja", "9-30": "Durga Puja", "10-1": "Durga Puja",
+ "10-2": "Vijoya Dashomi, Janmotsav of Sri Sri Sankardeva and Birth Day of Mahatma Gandhi", "10-6": "Kati Bihu",
+ "10-18": "Kali Puja and Diwali", "10-20": "Bhatri Dwitiya", "10-23": "Chhat Puja", "11-24": "Lachit Divas",
+ "12-2": "Asom Divas (Su-Ka-Pha Divas)", "12-25": "Christmas Day"
+};
+
+const HOLIDAYS_2026 = {
+ "1-14":"Magh Bihu and Tusu Puja", "1-15":"Magh Bihu and Tusu Puja", "1-23":"Netaji’s Birthday", "1-26":"Republic Day",
+ "1-27":"Gwthar Bathou San", "1-31":"Me-Dam-Me-Phi", "2-1":"Bir Chilaray Divas", "3-3":"Dol Jatra", "3-21":"Id-Ul-Fitr",
+ "4-3":"Good Friday", "4-14":"Bohag Bihu", "4-15":"Bohag Bihu", "4-16":"Bohag Bihu", "4-18":"Tithi of Damodar Deva",
+ "4-21":"Sati Sadhini Divas", "5-1":"May Day and Budha Purnima", "5-27":"Id-ul-Zuha", "6-1":"Janmotsav of Sri Sri Madhabdeva",
+ "8-15":"Independence Day", "9-1":"Tirubhav Tithi of Sri Sri Madhabdeva", "9-4":"Janmastomi", "9-12":"Tirubhav Tithi of Srimanta Sankardeva",
+ "9-21":"Janmotsav of Srimanta Sankardeva", "9-22":"Karam Puja", "10-2":"Birthday of Mahatma Gandhi", "10-18":"Kati Bihu and Durga Puja",
+ "10-19":"Durga Puja", "10-20":"Durga Puja", "10-21":"Vijaya Dashami", "10-25":"Half Holiday at 1:00 PM: Lakshmi Puja",
+ "11-8":"Kali Puja and Diwali", "11-11":"Bhatri Dwitiya", "11-15":"Chhath Puja", "11-24":"Guru Nanak’s Birthday and Lachit Divas",
+ "12-2":"Asom Divas (Su-Ka-Pha Divas)", "12-25":"Christmas Day"
+};
+
+// DYNAMIC DATE: This ensures it opens on the actual current month
+let viewDate = new Date(); 
+const realToday = new Date();
+
+const calendarEl = document.getElementById("calendar");
+const displayEl = document.getElementById("currentDisplay");
+const modalOverlay = document.getElementById("modalOverlay");
+const modalMsg = document.getElementById("modalMsg");
+
+document.getElementById("prevBtn").onclick = ()=>changeMonth(-1);
+document.getElementById("nextBtn").onclick = ()=>changeMonth(1);
+document.getElementById("modalClose").onclick = ()=>modalOverlay.style.display="none";
+
+function showModal(msg){
+  modalMsg.textContent = msg;
+  modalOverlay.style.display = "flex";
+}
+
+function changeMonth(delta){
+  viewDate.setMonth(viewDate.getMonth() + delta);
+  renderCalendar();
+}
+
+function renderCalendar(){
+  while(calendarEl.children.length > 7) {
+    calendarEl.removeChild(calendarEl.lastElementChild);
+  }
+
+  const y = viewDate.getFullYear();
+  const m = viewDate.getMonth();
+  const first = new Date(y, m, 1);
+  const last = new Date(y, m+1, 0);
+
+  // Update Header
+  displayEl.textContent = MONTH_NAMES[m] + " " + y;
+
+  const startIndex = first.getDay();
+  for(let i=0;i<startIndex;i++) calendarEl.appendChild(createCell(null,true));
+
+  let saturdays = [];
+  for(let d=1; d<=last.getDate(); d++){
+    if(new Date(y,m,d).getDay() === 6) saturdays.push(d);
+  }
+  const secondSat = saturdays[1];
+  const fourthSat = saturdays[3];
+
+  let currentHolidayList = (y === 2025) ? HOLIDAYS_2025 : (y === 2026 ? HOLIDAYS_2026 : {});
+
+  for(let d=1; d<=last.getDate(); d++){
+    const dt = new Date(y,m,d);
+    const dow = dt.getDay();
+    const key = `${m+1}-${d}`;
+
+    let classes = [];
+    let holidayName = currentHolidayList[key];
+    let isHoliday = !!holidayName;
+
+    if(isHoliday) classes.push("holiday");
+    if(dow === 0) classes.push("sunday");
+    if(dow === 6 && (d === secondSat || d === fourthSat)) classes.push("sat-special");
+
+    // Dynamic Today Check
+    if(y === realToday.getFullYear() && m === realToday.getMonth() && d === realToday.getDate()) {
+        classes.push("today");
+    }
+
+    calendarEl.appendChild(
+      createCell({year:y,month:m,day:d,dateObj:dt,key,isHoliday,holidayName,secondSat,fourthSat}, false, classes)
+    );
+  }
+}
+
+function createCell(info, outside, classes=[]){
+  const cell = document.createElement("div");
+  cell.className = "cell" + (outside ? " outside":"") + (classes.length?" "+classes.join(" "):"");
+
+  const num = document.createElement("div");
+  num.className = "day-number";
+  num.textContent = info ? info.day : "";
+  cell.appendChild(num);
+
+  if(!outside && info){
+    cell.onclick = function() { handleDateClick(info); };
+  }
+  return cell;
+}
+
+function handleDateClick(info){
+  const dow = info.dateObj.getDay();
+  let msg = "";
+
+  if(info.isHoliday){
+    msg = info.holidayName;
+    if(dow === 0) msg += " (Sunday)";
+    else if(dow === 6){
+      if(info.day === info.secondSat) msg += " (Second Saturday)";
+      else if(info.day === info.fourthSat) msg += " (Fourth Saturday)";
+    }
+    showModal(msg);
+    return;
+  }
+
+  if(dow === 0){ showModal("Sunday"); return; }
+
+  if(dow === 6){
+    if(info.day === info.secondSat){ showModal("Second Saturday of the Month"); return; }
+    if(info.day === info.fourthSat){ showModal("Fourth Saturday of the Month"); return; }
+  }
+
+  showModal(info.day + " " + MONTH_NAMES[info.dateObj.getMonth()] + " " + info.dateObj.getFullYear());
+}
+
+// Initial Render
+renderCalendar();
+</script>
+
+</body>
+</html>
