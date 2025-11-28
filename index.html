@@ -209,6 +209,8 @@
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
+    
+    /* Flex Column: Logo -> Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -222,16 +224,18 @@
     color: #9ca3af;
   }
 
+  /* LOGO IN FOOTER */
   .footer-logo {
-    width: 102px;  
+    width: 102px;  /* Professional Icon Size */
     height: 102px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     background: white;
     object-fit: cover;
-    margin-bottom: 4px; 
+    margin-bottom: 4px; /* Space between Logo and Install Button */
   }
 
+  /* INSTALL BUTTON */
   #installBtn {
     display: none;
     background: var(--primary-blue);
@@ -253,6 +257,7 @@
     transform: scale(0.96);
   }
 
+  /* TERMS BUTTON */
   #infoBtn {
     background: transparent;
     border: none;
@@ -377,7 +382,7 @@
   <div class="legend">
     <div class="legend-row">
       <span class="swatch-red"></span>
-      <span>Holiday</span>
+      <span>Holiday          </span>
       <span class="swatch-blue"></span>
       <span>Restricted Holiday</span>
     </div>
@@ -413,22 +418,30 @@
 </div>
 
 <script>
-// --- SERVICE WORKER & UPDATE NOTIFICATION LOGIC ---
+// --- AGGRESSIVE SERVICE WORKER UPDATE LOGIC ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((registration) => {
+    
+    // 1. Force Browser to Check Network (Bypass Cache)
+    // We append a timestamp (?t=...) so the browser thinks it's a new URL every time.
+    const swUrl = './sw.js?t=' + new Date().getTime();
+
+    navigator.serviceWorker.register(swUrl).then((registration) => {
       
-      // 1. Check if there is already a waiting worker (e.g., user ignored update earlier)
+      // 2. Immediately check for updates
+      registration.update();
+
+      // 3. Check if there's already a worker waiting (happens on reload)
       if (registration.waiting) {
          showUpdateNotification(registration.waiting);
       }
 
-      // 2. Listen for NEW updates
+      // 4. Listen for new workers installing
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         
         newWorker.addEventListener('statechange', () => {
-          // Only show notification if it is fully installed AND we already have a controller
+          // If the new worker is installed and there is already a controller, notify user
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               showUpdateNotification(newWorker);
           }
@@ -436,7 +449,7 @@ if ('serviceWorker' in navigator) {
       });
     });
 
-    // 3. Reload ONLY when the new worker takes control (after user clicks button)
+    // 5. Reload page when new worker activates
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
@@ -467,13 +480,17 @@ function showUpdateNotification(worker) {
   
   showModal(updateMsg);
   
-  // Wait a tiny bit for the modal to draw, then attach listener
   setTimeout(() => {
     const btn = document.getElementById('updateAppBtn');
     if(btn) {
       btn.onclick = () => {
-        // Send message to Service Worker to tell it to "Skip Waiting" and activate
+        // Send message to skip waiting
         worker.postMessage({ type: 'SKIP_WAITING' });
+        
+        // Failsafe: Reload manually if controllerchange doesn't fire fast enough
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
       };
     }
   }, 100);
