@@ -209,8 +209,6 @@
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
-    
-    /* Flex Column: Logo -> Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -224,18 +222,16 @@
     color: #9ca3af;
   }
 
-  /* LOGO IN FOOTER */
   .footer-logo {
-    width: 102px;  /* Professional Icon Size */
+    width: 102px;  
     height: 102px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     background: white;
     object-fit: cover;
-    margin-bottom: 4px; /* Space between Logo and Install Button */
+    margin-bottom: 4px; 
   }
 
-  /* INSTALL BUTTON */
   #installBtn {
     display: none;
     background: var(--primary-blue);
@@ -257,7 +253,6 @@
     transform: scale(0.96);
   }
 
-  /* TERMS BUTTON */
   #infoBtn {
     background: transparent;
     border: none;
@@ -423,31 +418,32 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((registration) => {
       
-      // Listen for updates found by the browser
+      // 1. Check if there is already a waiting worker (e.g., user ignored update earlier)
+      if (registration.waiting) {
+         showUpdateNotification(registration.waiting);
+      }
+
+      // 2. Listen for NEW updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         
-        // Track the state of the new worker
         newWorker.addEventListener('statechange', () => {
-          // If the new worker has reached the 'installed' state
-          if (newWorker.state === 'installed') {
-            // If there is already a controller (meaning this is an update, not first load)
-            if (navigator.serviceWorker.controller) {
-              showUpdateNotification();
-            }
+          // Only show notification if it is fully installed AND we already have a controller
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateNotification(newWorker);
           }
         });
       });
     });
 
-    // When the new Service Worker skips waiting and becomes controller, reload page
+    // 3. Reload ONLY when the new worker takes control (after user clicks button)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
   });
 }
 
-function showUpdateNotification() {
+function showUpdateNotification(worker) {
   const updateMsg = `
     <div style="text-align:center">
       <strong>New Version Available!</strong><br><br>
@@ -469,18 +465,18 @@ function showUpdateNotification() {
     </div>
   `;
   
-  // Use existing modal logic
   showModal(updateMsg);
   
-  // Attach click listener to the new button we just added to the DOM
-  const btn = document.getElementById('updateAppBtn');
-  if(btn) {
-    btn.onclick = () => {
-      // Reloading will trigger the new Service Worker to take over
-      // because we added self.skipWaiting() in sw.js
-      window.location.reload(); 
-    };
-  }
+  // Wait a tiny bit for the modal to draw, then attach listener
+  setTimeout(() => {
+    const btn = document.getElementById('updateAppBtn');
+    if(btn) {
+      btn.onclick = () => {
+        // Send message to Service Worker to tell it to "Skip Waiting" and activate
+        worker.postMessage({ type: 'SKIP_WAITING' });
+      };
+    }
+  }, 100);
 }
 
 // --- UNIVERSAL INSTALL LOGIC ---
