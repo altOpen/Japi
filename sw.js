@@ -1,5 +1,5 @@
-// CHANGE THIS VERSION NUMBER MANUALLY WHENEVER YOU UPDATE YOUR CODE
-const CACHE_NAME = 'japi-2025.11.28.v0958'; 
+// UPDATE THIS VERSION MANUALLY TO TRIGGER UPDATES
+const CACHE_NAME = 'japi-v1.2'; 
 
 const ASSETS = [
   './index.html',
@@ -8,14 +8,13 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  // Force the waiting service worker to become the active service worker.
-  self.skipWaiting(); 
+  // We removed self.skipWaiting() here so it doesn't update automatically.
+  // Instead, it waits for the user to click the button.
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-// New: Activate event to clean up old caches (CRITICAL for updates)
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keyList) => {
@@ -27,7 +26,14 @@ self.addEventListener('activate', (e) => {
       }));
     })
   );
-  return self.clients.claim(); // Take control of all clients immediately
+  return self.clients.claim();
+});
+
+// NEW: This listens for the "Update Now" click from index.html
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (e) => {
