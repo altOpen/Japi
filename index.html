@@ -374,14 +374,6 @@
     </div>
   </header>
 
-
-
-
-
-
-
-
-
   <div class="legend">
     <div class="legend-row">
       <span class="swatch-red"></span>
@@ -423,8 +415,26 @@
 <script>
 // --- CONTROLLED SERVICE WORKER UPDATE LOGIC ---
 
+
+
+
+
+
+
+
+
+
+
 // STEP 2: INCREMENT THIS TO MATCH SW.JS (e.g., v2.0 -> v2.1)
 const APP_VERSION = 'v2.3'; 
+
+
+
+
+
+
+
+
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -597,7 +607,7 @@ document.getElementById("modalClose").onclick = ()=>modalOverlay.style.display="
 
 document.getElementById("infoBtn").onclick = function() {
     const infoContent = `
-        <strong>Version:</strong> APP_VERSION<br><br>
+        <strong>Version:</strong> ${APP_VERSION}
         <strong>Special Thanks:</strong><br>Abinash Kalita for testing and suggestions.<br><br>
         <div class="legal-text">
         <strong>Terms & Conditions / Disclaimer:</strong><br><br>
