@@ -1,5 +1,5 @@
 // UPDATE THIS VERSION MANUALLY TO TRIGGER UPDATES
-const CACHE_NAME = 'japi-v1.2'; 
+const CACHE_NAME = 'japi-v1.3'; 
 
 const ASSETS = [
   './index.html',
