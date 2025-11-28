@@ -1,5 +1,5 @@
 // CHANGE THIS VERSION NUMBER MANUALLY WHENEVER YOU UPDATE YOUR CODE
-const CACHE_NAME = 'japi-2025.11.28.v0957'; 
+const CACHE_NAME = 'japi-2025.11.28.v0958'; 
 
 const ASSETS = [
   './index.html',
