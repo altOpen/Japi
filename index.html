@@ -202,15 +202,13 @@
     color: var(--text-main);
   }
 
-  /* --- FOOTER (Updated Layout) --- */
+  /* --- FOOTER --- */
   footer {
     flex-shrink: 0;
     padding-top: 16px;
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
-    
-    /* Flex Column: Logo -> Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -224,18 +222,16 @@
     color: #9ca3af;
   }
 
-  /* LOGO IN FOOTER */
   .footer-logo {
-    width: 102px;  /* Professional Icon Size */
+    width: 102px;  
     height: 102px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     background: white;
     object-fit: cover;
-    margin-bottom: 4px; /* Space between Logo and Install Button */
+    margin-bottom: 4px; 
   }
 
-  /* INSTALL BUTTON */
   #installBtn {
     display: none;
     background: var(--primary-blue);
@@ -257,7 +253,6 @@
     transform: scale(0.96);
   }
 
-  /* TERMS BUTTON */
   #infoBtn {
     background: transparent;
     border: none;
@@ -382,7 +377,7 @@
   <div class="legend">
     <div class="legend-row">
       <span class="swatch-red"></span>
-      <span>Holidays</span>
+      <span>Holiday          </span>
       <span class="swatch-blue"></span>
       <span>Restricted Holiday</span>
     </div>
@@ -418,30 +413,31 @@
 </div>
 
 <script>
-// --- AGGRESSIVE SERVICE WORKER UPDATE LOGIC ---
+// --- CONTROLLED SERVICE WORKER UPDATE LOGIC ---
+
+// STEP 2: INCREMENT THIS TO MATCH SW.JS (e.g., v2.0 -> v2.1)
+const APP_VERSION = 'v2.0'; 
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     
-    // 1. Force Browser to Check Network (Bypass Cache)
-    // We append a timestamp (?t=...) so the browser thinks it's a new URL every time.
-    const swUrl = './sw.js?t=' + new Date().getTime();
+    // Check based on version number, not random time
+    const swUrl = `./sw.js?v=${APP_VERSION}`;
 
     navigator.serviceWorker.register(swUrl).then((registration) => {
       
-      // 2. Immediately check for updates
+      // Manual update check
       registration.update();
 
-      // 3. Check if there's already a worker waiting (happens on reload)
       if (registration.waiting) {
          showUpdateNotification(registration.waiting);
       }
 
-      // 4. Listen for new workers installing
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         
         newWorker.addEventListener('statechange', () => {
-          // If the new worker is installed and there is already a controller, notify user
+          // Only show notification if installed AND there is a controller
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               showUpdateNotification(newWorker);
           }
@@ -449,7 +445,6 @@ if ('serviceWorker' in navigator) {
       });
     });
 
-    // 5. Reload page when new worker activates
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
@@ -484,10 +479,8 @@ function showUpdateNotification(worker) {
     const btn = document.getElementById('updateAppBtn');
     if(btn) {
       btn.onclick = () => {
-        // Send message to skip waiting
         worker.postMessage({ type: 'SKIP_WAITING' });
-        
-        // Failsafe: Reload manually if controllerchange doesn't fire fast enough
+        // Failsafe reload
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -502,14 +495,12 @@ const installBtn = document.getElementById('installBtn');
 const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
 const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
 
-// Android / Desktop
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   installBtn.style.display = 'block'; 
 });
 
-// iOS
 if (isIos && !isInStandaloneMode) {
   installBtn.style.display = 'block'; 
 }
