@@ -209,6 +209,8 @@
     padding-bottom: 8px;
     border-top: 1px solid #f3f4f6;
     background: var(--card-bg);
+    
+    /* Flex Column: Logo -> Install -> Copyright -> Terms */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -222,16 +224,18 @@
     color: #9ca3af;
   }
 
+  /* LOGO IN FOOTER */
   .footer-logo {
-    width: 102px;  
+    width: 102px;  /* Professional Icon Size */
     height: 102px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     background: white;
     object-fit: cover;
-    margin-bottom: 4px; 
+    margin-bottom: 4px; /* Space between Logo and Install Button */
   }
 
+  /* INSTALL BUTTON */
   #installBtn {
     display: none;
     background: var(--primary-blue);
@@ -253,6 +257,7 @@
     transform: scale(0.96);
   }
 
+  /* TERMS BUTTON */
   #infoBtn {
     background: transparent;
     border: none;
@@ -377,7 +382,7 @@
   <div class="legend">
     <div class="legend-row">
       <span class="swatch-red"></span>
-      <span>Holidays          </span>
+      <span>Holiday          </span>
       <span class="swatch-blue"></span>
       <span>Restricted Holiday</span>
     </div>
@@ -414,11 +419,17 @@
 
 <script>
 // --- SERVICE WORKER & UPDATE NOTIFICATION LOGIC ---
+
+// CHANGE THIS VERSION NUMBER TO MATCH YOUR sw.js VERSION MANUALLY
+const APP_VERSION = '1.3'; 
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((registration) => {
+    // CACHE BUSTING: We add ?v=... to the filename. 
+    // This forces iPhone/Safari to check for a new file instead of using the old cached one.
+    navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`).then((registration) => {
       
-      // 1. Check if there is already a waiting worker (e.g., user ignored update earlier)
+      // 1. Check if an update is already waiting (user ignored it previously)
       if (registration.waiting) {
          showUpdateNotification(registration.waiting);
       }
@@ -436,7 +447,7 @@ if ('serviceWorker' in navigator) {
       });
     });
 
-    // 3. Reload ONLY when the new worker takes control (after user clicks button)
+    // 3. Reload when the new worker takes control
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
@@ -467,13 +478,19 @@ function showUpdateNotification(worker) {
   
   showModal(updateMsg);
   
-  // Wait a tiny bit for the modal to draw, then attach listener
   setTimeout(() => {
     const btn = document.getElementById('updateAppBtn');
     if(btn) {
       btn.onclick = () => {
-        // Send message to Service Worker to tell it to "Skip Waiting" and activate
+        // Tell the worker to activate immediately
         worker.postMessage({ type: 'SKIP_WAITING' });
+        
+        // FAILSAFE FOR IPHONE:
+        // Sometimes iOS doesn't fire the reload event fast enough.
+        // We force a manual reload after 0.5 seconds to ensure the user isn't stuck.
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
       };
     }
   }, 100);
