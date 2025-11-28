@@ -1,5 +1,5 @@
-// CHANGE THIS TO v1.3
-const CACHE_NAME = 'japi-11.28.V1154; 
+// UPDATE THIS VERSION MANUALLY TO TRIGGER UPDATES
+const CACHE_NAME = 'japi-v1.2'; 
 
 const ASSETS = [
   './index.html',
@@ -8,6 +8,8 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
+  // We removed self.skipWaiting() here so it doesn't update automatically.
+  // Instead, it waits for the user to click the button.
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
@@ -27,6 +29,7 @@ self.addEventListener('activate', (e) => {
   return self.clients.claim();
 });
 
+// NEW: This listens for the "Update Now" click from index.html
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
