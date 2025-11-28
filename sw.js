@@ -1,5 +1,5 @@
 // CHANGE THIS TO v1.3
-const CACHE_NAME = 'japi-v2.1'; 
+const CACHE_NAME = 'japi-v2.2'; 
 
 const ASSETS = [
   './index.html',
