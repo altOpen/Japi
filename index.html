@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Japi</title>
 
-<!-- PWA Configuration -->
 <link rel="manifest" href="manifest.json">
-<!-- Using CDN for Japi Repo -->
 <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.png">
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/altOpen/Japi@main/logo.png">
 <meta name="theme-color" content="#d32f2f">
@@ -411,7 +409,6 @@
 
 </div>
 
-<!-- Modal -->
 <div id="modalOverlay">
   <div id="modalBox">
     <div id="modalTitle">Info</div>
@@ -421,11 +418,69 @@
 </div>
 
 <script>
-// --- SERVICE WORKER ---
+// --- SERVICE WORKER & UPDATE NOTIFICATION LOGIC ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.register('./sw.js').then((registration) => {
+      
+      // Listen for updates found by the browser
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        
+        // Track the state of the new worker
+        newWorker.addEventListener('statechange', () => {
+          // If the new worker has reached the 'installed' state
+          if (newWorker.state === 'installed') {
+            // If there is already a controller (meaning this is an update, not first load)
+            if (navigator.serviceWorker.controller) {
+              showUpdateNotification();
+            }
+          }
+        });
+      });
+    });
+
+    // When the new Service Worker skips waiting and becomes controller, reload page
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
+}
+
+function showUpdateNotification() {
+  const updateMsg = `
+    <div style="text-align:center">
+      <strong>New Version Available!</strong><br><br>
+      A new update is ready.<br>
+      Click below to apply changes.<br><br>
+      <button id="updateAppBtn" style="
+        background: #d32f2f; 
+        color: white; 
+        border: none; 
+        padding: 10px 20px; 
+        border-radius: 50px; 
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        ">
+        UPDATE NOW
+      </button>
+    </div>
+  `;
+  
+  // Use existing modal logic
+  showModal(updateMsg);
+  
+  // Attach click listener to the new button we just added to the DOM
+  const btn = document.getElementById('updateAppBtn');
+  if(btn) {
+    btn.onclick = () => {
+      // Reloading will trigger the new Service Worker to take over
+      // because we added self.skipWaiting() in sw.js
+      window.location.reload(); 
+    };
+  }
 }
 
 // --- UNIVERSAL INSTALL LOGIC ---
@@ -670,5 +725,3 @@ renderCalendar();
 
 </body>
 </html>
-
-
